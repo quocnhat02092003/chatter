@@ -1,10 +1,54 @@
+"use client";
 import Link from "next/link";
 import { Apple, Globe, Lock, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Cobe from "../_components/cobe/Cobe";
+import React from "react";
+import { registerUser } from "@/services/user/RegisterService";
 
 export default function RegisterRoute() {
+  const [dataUser, setDataUser] = React.useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [agreeTerms, setAgreeTerms] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const [successMessage, setSuccessMessage] = React.useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSubmitting(true);
+
+    try {
+      await registerUser(dataUser);
+      setSuccessMessage(
+        "Đăng ký thành công. Bạn có thể đăng nhập ngay bây giờ.",
+      );
+      setDataUser({
+        fullName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[linear-gradient(180deg,#e5e7eb_0%,#d9dde3_100%)] px-4 py-6 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_-12%,rgba(255,255,255,0.75),transparent_56%)]" />
@@ -71,7 +115,19 @@ export default function RegisterRoute() {
             <span className="h-px flex-1 bg-[#d4d9e0]" />
           </div>
 
-          <form className="mt-7 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+            {errorMessage ? (
+              <div className="rounded-xl border border-[#f0b8b8] bg-[#fde8e8] px-4 py-3 text-sm font-medium text-[#b22b2b]">
+                {errorMessage}
+              </div>
+            ) : null}
+
+            {successMessage ? (
+              <div className="rounded-xl border border-[#addfb7] bg-[#e8f9ed] px-4 py-3 text-sm font-medium text-[#1f7a35]">
+                {successMessage}
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <label
                 htmlFor="full-name"
@@ -89,6 +145,10 @@ export default function RegisterRoute() {
                   type="text"
                   placeholder="Alex Rivers"
                   className="h-11 rounded-xl border-0 bg-[#dbe0e6] pl-10 text-[15px] text-[#2e3947] placeholder:text-[#838c99]"
+                  value={dataUser.fullName}
+                  onChange={(e) =>
+                    setDataUser({ ...dataUser, fullName: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -105,6 +165,10 @@ export default function RegisterRoute() {
                 type="email"
                 placeholder="alex@example.com"
                 className="h-11 rounded-xl border-0 bg-[#dbe0e6] text-[15px] text-[#2e3947] placeholder:text-[#838c99]"
+                value={dataUser.email}
+                onChange={(e) =>
+                  setDataUser({ ...dataUser, email: e.target.value })
+                }
               />
             </div>
 
@@ -126,6 +190,10 @@ export default function RegisterRoute() {
                     type="password"
                     placeholder="••••••••"
                     className="h-11 rounded-xl border-0 bg-[#dbe0e6] pl-10 text-[15px] text-[#2e3947] placeholder:text-[#838c99]"
+                    value={dataUser.password}
+                    onChange={(e) =>
+                      setDataUser({ ...dataUser, password: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -147,6 +215,13 @@ export default function RegisterRoute() {
                     type="password"
                     placeholder="••••••••"
                     className="h-11 rounded-xl border-0 bg-[#dbe0e6] pl-10 text-[15px] text-[#2e3947] placeholder:text-[#838c99]"
+                    value={dataUser.confirmPassword}
+                    onChange={(e) =>
+                      setDataUser({
+                        ...dataUser,
+                        confirmPassword: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -154,6 +229,8 @@ export default function RegisterRoute() {
 
             <label className="mt-1 flex cursor-pointer items-start gap-2.5 text-sm text-[#4f5968]">
               <input
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                checked={agreeTerms}
                 type="checkbox"
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border border-[#aeb7c5] accent-[#1369db]"
               />
@@ -167,9 +244,17 @@ export default function RegisterRoute() {
 
             <Button
               type="submit"
+              disabled={
+                isSubmitting ||
+                !dataUser.fullName ||
+                !dataUser.email ||
+                !dataUser.password ||
+                !dataUser.confirmPassword ||
+                !agreeTerms
+              }
               className="mt-2 h-12 w-full rounded-xl bg-[#1369db] text-base font-semibold text-white shadow-[0_10px_24px_rgba(20,88,184,0.34)] transition hover:bg-[#0f5ec7]"
             >
-              Create Account
+              {isSubmitting ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
